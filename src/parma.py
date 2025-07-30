@@ -1,3 +1,5 @@
+import numpy as np
+
 class Baseparma :
     COM = "COM11"
     Baud_rate = 9600
@@ -21,4 +23,6 @@ class CAPparma :
 class Findparma:
     frame_width  = 640
     frame_height = 480
+    frame_lowerr = np.array([0, 0, 0])
+    frame_upperr = np.array([180, 137, 97])
     
