@@ -182,11 +182,14 @@ class Finder:
         cv2.imshow("Contours (Green: Outer, Red: Inner)", frame)
 
     def find_frame_center(self,frame, lower_color, upper_color):
+        rect_points = ([0,0],[0,0],[0,0],[0,0])
+        has_goal = False
+        center =(0,0)
         frame = cv2.resize(frame, (self.width, self.height))
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
         kernel = np.ones((5,5),np.uint8)
-        sigma = 5.0
+        sigma = 1.0
         #sigma越小，对中心像素的权重越大，去噪能力越强。去除轻微噪声：使用较小的 σ（如 0.8-1.5），去除严重噪声：增大 σ（如 2-5），但需权衡模糊程度。
         kernel_size = 5
         # 3. 中值滤波
@@ -232,31 +235,115 @@ class Finder:
                 line1 = Finder.two_points_to_line(rect_points[0], rect_points[2])
                 line2 = Finder.two_points_to_line(rect_points[1], rect_points[3])
                 center = Finder.compute_intersection(line1, line2)
-                center_draw = (int(center[0]), int(center[1]))
-                rect_points_draw = rect_points.astype(int).tolist()
-                # 画角点
-                for i in range(len(rect_points_draw)):
-                    x,y = rect_points_draw[i]
-                    cv2.circle(frame, (x,y), radius=5, color=(0, 0, 255), thickness=-1)
-                    cv2.putText(frame, f"Point {i}", (x+10, y-10), cv2.FONT_HERSHEY_PLAIN, 0.8, (0,0,255),1)
+                if center is not None:
+                    has_goal = True
+                    center_draw = (int(center[0]), int(center[1]))
+                    rect_points_draw = rect_points.astype(int).tolist()
+                    # 画角点
+                    for i in range(len(rect_points_draw)):
+                        x,y = rect_points_draw[i]
+                        cv2.circle(frame, (x,y), radius=5, color=(0, 0, 255), thickness=-1)
+                        cv2.putText(frame, f"Point {i}", (x+10, y-10), cv2.FONT_HERSHEY_PLAIN, 0.8, (0,0,255),1)
 
-                cv2.line(frame, rect_points_draw[0], rect_points_draw[2], color=(255, 0, 0), thickness=2)
-                cv2.line(frame, rect_points_draw[1], rect_points_draw[3], color=(255, 0, 0), thickness=2)
-                cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
-                
-                cv2.circle(frame, center_draw, radius=5, color=(0, 0, 255), thickness=-1)
-                # print(f"内轮廓面积: {cv2.contourArea(contour)}")``
-                print(f"{center}")
-        if center is not None:
-            has_goal = True
-        else:
-            has_goal = False
+                    cv2.line(frame, rect_points_draw[0], rect_points_draw[2], color=(255, 0, 0), thickness=2)
+                    cv2.line(frame, rect_points_draw[1], rect_points_draw[3], color=(255, 0, 0), thickness=2)
+                    cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+                    
+                    cv2.circle(frame, center_draw, radius=5, color=(0, 0, 255), thickness=-1)
+                    # print(f"内轮廓面积: {cv2.contourArea(contour)}")``
+                    # print(f"{center}")
+    
+               
                 
                 # 6. 显示结果
         cv2.imshow("Original Mask",filtered_mask)
         cv2.imshow("Contours (Green: Outer, Red: Inner)", frame)
 
-        return center,has_goal
+        return center,has_goal,rect_points
+    
+    def find_frame_center2(self,frame,  threshold_value=127):
+        has_goal = False
+        center =(0,0)
+        frame = cv2.resize(frame, (self.width, self.height))
+        # 转换为灰度图像
+        gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # 图像二值化
+        _, mask = cv2.threshold(gray_image, threshold_value, 255, cv2.THRESH_BINARY)
+        mask = cv2.bitwise_not(mask)
+      
+       
+        kernel = np.ones((5,5),np.uint8)
+        sigma = 1.0
+        #sigma越小，对中心像素的权重越大，去噪能力越强。去除轻微噪声：使用较小的 σ（如 0.8-1.5），去除严重噪声：增大 σ（如 2-5），但需权衡模糊程度。
+        kernel_size = 5
+        # 3. 中值滤波
+        # median_filtered = cv2.medianBlur(mask, kernel_size)
+        
+        # 2. 高斯滤波
+        
+        gaussian_filtered = cv2.GaussianBlur(mask, (kernel_size, kernel_size), sigma)
+        filtered_mask = gaussian_filtered
+        # 3. 查找轮廓（使用RETR_CCOMP以获取层次结构）
+        contours, hierarchy = cv2.findContours(filtered_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+        # 4. 区分内外轮廓
+        outer_contours = []
+        inner_contours = []
+        for i, contour in enumerate(contours):
+            # hierarchy[i][3]表示父轮廓的索引，-1表示无父轮廓（外轮廓）
+            if hierarchy[0][i][3] == -1: 
+                outer_contours.append(contour)
+            else:
+                inner_contours.append(contour)
+
+        # # 5. 绘制轮廓
+        # frame = cv2.cvtColor(filtered_mask, cv2.COLOR_GRAY2BGR)  # 转换为彩色图像
+        # # 绘制外轮廓（绿色）
+        # for contour in outer_contours:
+        #     cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+        #     print(f"外轮廓面积: {cv2.contourArea(contour)}")
+        # 绘制内轮廓（红色）
+        # for contour in inner_contours:
+        #     # cv2.drawContours(frame, [contour], -1, (0, 0, 255), 2)
+        #     print(f"内轮廓面积: {cv2.contourArea(contour)}")
+        for contour in inner_contours:
+            area = cv2.contourArea(contour, oriented=False)
+            epsilon = 0.02 * cv2.arcLength(contour, True)  # 阈值参数，可调整
+            approx = cv2.approxPolyDP(contour, epsilon, True)  # 多边形逼近
+
+            num_sides = len(approx)  # 边的数量
+            if num_sides == 4 and area>1000 :
+                rect_points = approx.reshape(4, 2)
+                rect_points = Finder.order_points(rect_points)
+                
+                line1 = Finder.two_points_to_line(rect_points[0], rect_points[2])
+                line2 = Finder.two_points_to_line(rect_points[1], rect_points[3])
+                center = Finder.compute_intersection(line1, line2)
+                if center is not None:
+                    has_goal = True
+                    center_draw = (int(center[0]), int(center[1]))
+                    rect_points_draw = rect_points.astype(int).tolist()
+                    # 画角点
+                    for i in range(len(rect_points_draw)):
+                        x,y = rect_points_draw[i]
+                        cv2.circle(frame, (x,y), radius=5, color=(0, 0, 255), thickness=-1)
+                        cv2.putText(frame, f"Point {i}", (x+10, y-10), cv2.FONT_HERSHEY_PLAIN, 0.8, (0,0,255),1)
+
+                    cv2.line(frame, rect_points_draw[0], rect_points_draw[2], color=(255, 0, 0), thickness=2)
+                    cv2.line(frame, rect_points_draw[1], rect_points_draw[3], color=(255, 0, 0), thickness=2)
+                    cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+                    
+                    cv2.circle(frame, center_draw, radius=5, color=(0, 0, 255), thickness=-1)
+                    # print(f"内轮廓面积: {cv2.contourArea(contour)}")``
+                    print(f"{center}")
+    
+               
+                
+                # 6. 显示结果
+        cv2.imshow("Original Mask",filtered_mask)
+        cv2.imshow("Contours (Green: Outer, Red: Inner)", frame)
+
+        return center,has_goal,rect_points
         
 
 
@@ -278,7 +365,7 @@ if __name__ == "__main__":
         if not ret:
             print("无法读取帧！")
             break
-        finder.find_frame_center(frame,Findparma.frame_lowerr,Findparma.frame_upperr)
+        finder.find_frame_center2(frame,Findparma.threshold_value)
         # contours,color_mask = finder.find_color(frame,lower_color,upper_color)
 
         # for contour in contours:

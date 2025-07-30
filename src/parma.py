@@ -25,4 +25,5 @@ class Findparma:
     frame_height = 480
     frame_lowerr = np.array([0, 0, 0])
     frame_upperr = np.array([180, 137, 97])
+    threshold_value = 140
     
