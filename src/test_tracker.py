@@ -43,8 +43,8 @@ def find():
     prev_angle1,prev_angle2 = 0,0
     finder = Finder()
     cap = cv2.VideoCapture(1)
-    lower_color = np.array([115,63,92])
-    upper_color = np.array([164,226,255])
+    lower_color = np.array([88,100,186])
+    upper_color = np.array([180,255,255])
     min_area = 100
     while True:
         # 读取帧
@@ -98,17 +98,19 @@ def send_angle():
     
     ser = Sender(Baseparma.COM_DOWN,Baseparma.Baud_rate_down)
     while True:
-        if abs(angle1) < 1.0 :
+        if abs(angle1) < 3.0 :
             angle1 = 0
-        if abs(angle2) < 1.0 :
+        if abs(angle2) < 3.0 :
             angle2 =0
 
          
         send_angle1 = smooth_angle(prev_angle1,angle1,0.2)
         send_angle2 = smooth_angle(prev_angle2,angle2,0.2)
-        ser.send_angles(send_angle1,send_angle2)
-        # ser.send_angles(0,angle2)
+        # ser.send_angles(send_angle1,send_angle2)
+        ser.send_angles(0,angle2)
         # ser.send_angles(angle1,0)
+        # ser.send_angles(send_angle1,0)
+        print(f"已发送角度: {-angle2}")
         # print(angle1,angle2)
         # print(send_angle1,send_angle2)
         # time.sleep(0.5)

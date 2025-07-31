@@ -84,6 +84,35 @@ def send_angle():
         try:
             if sender_up.ser.in_waiting > 0:
                 flag_byte = sender_up.ser.read().decode('utf-8').strip()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
                 print(f"接收到标志位: {flag_byte}")
             if flag_byte in ('u', 'n','c'):
                 current_flag = flag_byte

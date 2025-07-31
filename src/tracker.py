@@ -2,7 +2,7 @@ from parma import CAPparma
 import math
 import numpy as np
 
-def calculate_relative_angles(pixel_point, image_size, fov, ref_point, pixel_threshold=10):
+def calculate_relative_angles(pixel_point, image_size, fov, ref_point, pixel_threshold=0):
     """
     计算从参考点指向图像中某个像素的相对俯仰角和偏航角，
     并判断该像素是否靠近画面中心（像素级判断）
