@@ -68,7 +68,7 @@ def find():
                     has_valid_point = True
                     point = (cx, cy)
                     pre_angle1,pre_angle2 = angle1,angle2
-                    angle1,angle2 = calculate_relative_angles(point, (Findparma.frame_width,Findparma.frame_height), 100, (0,0.03,0))
+                    angle1,angle2,_ = calculate_relative_angles(point, (Findparma.frame_width,Findparma.frame_height), 100, (0,0.03,0))
                     # 在图像上绘制中心点
                     cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)  # 绿色实心圆
                     cv2.putText(frame, f"({cx}, {cy})", (cx+10, cy), 
@@ -96,7 +96,7 @@ def find():
 def send_angle():
     global angle1,angle2,prev_angle1,prev_angle2
     
-    ser = Sender(Baseparma.COM,Baseparma.Baud_rate)
+    ser = Sender(Baseparma.COM_DOWN,Baseparma.Baud_rate_down)
     while True:
         if abs(angle1) < 1.0 :
             angle1 = 0
@@ -110,7 +110,7 @@ def send_angle():
         # ser.send_angles(0,angle2)
         # ser.send_angles(angle1,0)
         # print(angle1,angle2)
-        print(send_angle1,send_angle2)
+        # print(send_angle1,send_angle2)
         # time.sleep(0.5)
 
 

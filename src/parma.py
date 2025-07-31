@@ -1,8 +1,10 @@
 import numpy as np
 
 class Baseparma :
-    COM = "COM11"
-    Baud_rate = 9600
+    COM_UP   = "COM10"
+    COM_DOWN = "COM12"
+    Baud_rate_up = 9600
+    Baud_rate_down = 9600
     ID = [ "$1;", "$2;", "$3;", "$4;", "$5;", "$6;", "$7;", "$8;", "$9;", "$10;", "$11;"]
    
     
@@ -23,7 +25,7 @@ class CAPparma :
 class Findparma:
     frame_width  = 640
     frame_height = 480
-    frame_lowerr = np.array([0, 0, 0])
-    frame_upperr = np.array([180, 137, 97])
+    hsv_lower = np.array([0, 0, 0])
+    hsv_upper = np.array([180, 137, 97])
     threshold_value = 140
     

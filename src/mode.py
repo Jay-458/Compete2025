@@ -11,11 +11,12 @@ message_queue1 = queue.Queue()
 
 #创建串口
 try:
-    ser1 = Sender(message_queue1)
-    print(f"串口{Baseparma.COM} 已打开")
+    ser_up = Sender(Baseparma.COM_UP, Baseparma.Baud_rate_up)
+    
+    print(f"串口{Baseparma.COM_UP} 已打开")
 except serial.SerialException as e:
     print(f"串口错误:{e}")
-    ser1 = None
+    ser_up = None
 
 
 
@@ -24,15 +25,14 @@ def serial_listener(queue):
     """
     串口监听线程，持续监听串口数据并将数据放入消息队列。
     """
-    global ser1
-    if ser1 is None:
+    global ser_up
+    if ser_up is None:
         print("串口未初始化，监听线程退出")
         return
-
     try:
         while True:
-            if ser1.ser.in_waiting:
-                message = ser1.ser.readline(ser1.ser.in_waiting).decode('utf-8',errors='replace').strip()
+            if ser_up.ser.in_waiting:
+                message = ser_up.ser.readline(ser_up.ser.in_waiting).decode('utf-8',errors='replace').strip()
                 message_queue1.put(message)
                 print(f"收到消息: {message}")
             time.sleep(0.1)  # 避免CPU占用过高
@@ -57,7 +57,7 @@ def message_processor(ser,queue):
                         message = None                        
                         break
                     elif message[0] == 'm':
-                        print(f"收到‘m")
+                        print(f"收到m")
                         ser.send(Baseparma.ID[3])  
                         message = None
                     else:
@@ -84,7 +84,7 @@ def main():
     serial_thread.start()
 
     #启动消息处理线程
-    processor_thread = threading.Thread(target=message_processor,args=(ser1,message_queue1))
+    processor_thread = threading.Thread(target=message_processor,args=(ser_up,message_queue1))
     processor_thread.daemon =True
     processor_thread.start()
 
@@ -96,8 +96,8 @@ def main():
         print("程序被用户中断")
     finally:
         # 清理资源
-        if ser1 and ser1.ser.is_open:
-            ser1.ser.close()
+        if ser_up and ser_up.ser.is_open:
+            ser_up.ser.close()
             print("串口已关闭")
 
 if __name__ =="__main__":

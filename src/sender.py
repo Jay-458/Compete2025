@@ -10,9 +10,10 @@ import queue
 
 class Sender :
     def __init__(self,port,baudrate):
-        self.Baud_rate = Baseparma.Baud_rate
+        self.Baud_rate = baudrate
+        self.COM = port
         self.ser = serial.Serial(port=port,baudrate=baudrate)
-        self.queue = queue
+
 
 
     def INFO(self):
@@ -20,8 +21,9 @@ class Sender :
 
     def send(self,date):
         self.ser.write(date)
-        print(f"已发送:{date}")
-        
+        # print(f"已发送:{date}")
+    def send_bytes(self, data):
+        self.ser.write(data.encode('utf-8')) 
     def get(self):
         while True:
             if self.ser.in_waiting > 0:
